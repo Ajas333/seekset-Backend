@@ -14,8 +14,8 @@ from channels.routing import ProtocolTypeRouter,URLRouter
 from chat.route import websocket_urlpatterns
 from channels.auth import AuthMiddlewareStack
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-django.setup()
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+# django.setup()
 
 application = get_asgi_application()
 
