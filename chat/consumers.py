@@ -3,6 +3,12 @@ from channels.db import database_sync_to_async
 from EmpJobs.models import ApplyedJobs
 from account.models import Candidate,Employer
 import json
+import os
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+django.setup()
+
 from .models import ChatMessage,ChatRoom,CandidateNotification
 from django.contrib.auth import get_user_model
 
