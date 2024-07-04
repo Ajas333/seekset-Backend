@@ -102,7 +102,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         message = event['data']['message']
         sendername = event['data']['sendername']
         is_read = event['data']['is_read']
-
+        print("helllllllllllllllllooooooooooooooooooooooo")
         await self.send(text_data=json.dumps({
             'message': message,
             'sendername': sendername,
