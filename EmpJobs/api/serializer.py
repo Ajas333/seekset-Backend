@@ -35,7 +35,7 @@ class EmployerSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
     class Meta:
         model = Employer
-        fields = ['profile_pic','user_id','user_email','phone','id','industry','user_full_name','headquarters','hr_name','hr_phone','hr_email','address','about','website_link','roles']
+        fields = ['profile_pic','user_id','user_email','phone','id','industry','user_full_name','headquarters','address','about','website_link','roles']
 
     def get_roles(self, obj):
         roles = Roles.objects.filter(employer=obj)

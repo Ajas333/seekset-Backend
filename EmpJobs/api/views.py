@@ -55,6 +55,7 @@ class EditJob(APIView):
 class GetJob(APIView):
     permission_classes = [IsAuthenticated]
     def get(self,request):
+        print("ayyyyyyyyoooooooooooo")
         user=request.user
         print(user)
         try:
