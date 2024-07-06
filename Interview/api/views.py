@@ -18,6 +18,7 @@ from EmpJobs.models import *
 class InterviewSheduleView(APIView):
     permission_classes=[IsAuthenticated]
     def post(self, request):
+        print("step1")
         user = request.user
         employer = Employer.objects.get(user=user)
         candidate_id = request.data.get('candidate')
@@ -75,6 +76,7 @@ class getShedulesView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self,request):
         user = request.user
+        print("5cr67vt8by9un0im",user)
         try:
             try:
                 candidate = Candidate.objects.get(user=user)

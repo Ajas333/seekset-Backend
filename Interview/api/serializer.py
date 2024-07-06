@@ -33,9 +33,12 @@ class InterviewSheduleSerializer(serializers.ModelSerializer):
     def get_employer_name(self,obj):
         return obj.employer.user.full_name
     
-    def get_applyDate(self,obj):
-        applyedJobs=ApplyedJobs.objects.get(job=obj.job)
-        return applyedJobs.applyed_on
+    def get_applyDate(self, obj):
+        applyedJobs = ApplyedJobs.objects.filter(job=obj.job)
+        if applyedJobs.exists():
+            return applyedJobs.first().applyed_on  
+        return None
+
     
     def get_candidate_name(self,obj):
         return obj.candidate.user.full_name
