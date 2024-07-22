@@ -497,7 +497,7 @@ class UserDetails(APIView):
         return Response(content)
 
 class CandidateProfileCreation(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         print(request.data)
