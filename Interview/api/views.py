@@ -68,6 +68,7 @@ class CancelApplicationView(APIView):
                 application.save()
                 applyed.save()
                 cancell_shedule_mail.delay(email,date,username,title)
+                
                 return Response({"message":"application cancelled sucessfull"},status=status.HTTP_200_OK)
         except application.DoesNotExist:
             return Response({"message":"something went wrong"},status=status.HTTP_404_NOT_FOUND)

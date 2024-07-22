@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+from google.auth.transport import requests 
 
 
 class CurrentUser(APIView):
@@ -199,113 +199,140 @@ class ResetPassword(APIView):
             return Response({"message": "Error"}, status=status.HTTP_400_BAD_REQUEST)
 
 class AuthEmployerView(APIView):
-    permission_classes= [AllowAny]
-    def post(self,request):
+    permission_classes = [AllowAny]
+    def post(self, request):
         print(request.data)
         GOOGLE_AUTH_API = '588719467693-e6763ad5dltlhmi7bod9kgrcpubhi5ou.apps.googleusercontent.com'
+        email = None
+        user_info = None
         try:
-            google_request = google_requests.Request()
+            google_request = requests.Request()
             user_info = id_token.verify_oauth2_token(
-                request.data['id_token'], google_request, GOOGLE_AUTH_API
+                request.data['client_id'], google_request, GOOGLE_AUTH_API
             )
             email = user_info['email']
-            print("Email from frontend:", email, user_info)
+            print(user_info)
         except ValueError as e:
             print("Token verification failed:", str(e))
-            return Response(status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response({"error": "client_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         if not User.objects.filter(email=email).exists():
-            username = user_info['name']
-            first_name = user_info['given_name']
-            last_name = user_info['family_name']
-            profile_picture = user_info['picture']
-            print(username,first_name,last_name,profile_picture)
-            user = User.objects.create(full_name=username,email=email,user_type='employer',is_active=True,is_email_verified=True)
-            employer = Employer.objects.create(user=user,profile_pic=profile_picture)
-            user.save()
-            employer.save()
-            
-            user=User.objects.get(email=email)
+            try:
+                username = user_info['name']
+                first_name = user_info['given_name']
+                last_name = user_info['family_name']
+                profile_picture = user_info['picture']
+                print(username, first_name, last_name, profile_picture)
+                user = User.objects.create(full_name=username, email=email, user_type='employer', is_active=True, is_email_verified=True)
+                employer = Employer.objects.create(user=user, profile_pic=profile_picture)
+                user.save()
+                employer.save()
+            except Exception as e:
+                print(f"User creation failed: {e}")
+                return Response({"error": "Failed to create user"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+            user = User.objects.get(email=email)
             if not user.is_active:
                 return Response({"message": "Your account is inactive!"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
-            elif not user.user_type == 'employer':
+            elif user.user_type != 'employer':
                 return Response({"message": "Only employer can login!"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
             else:
                 try:
-                    employer=Employer.objects.get(user=user)
-                    employer=EmployerSerializer(employer).data
-                    user_data=employer
+                    employer = Employer.objects.get(user=user)
+                    employer_data = EmployerSerializer(employer).data
                 except Employer.DoesNotExist:
-                    return Response({"message": "something went Wrong"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION) 
-                
+                    return Response({"message": "Employer not found"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+
             refresh = RefreshToken.for_user(user)
-            refresh["name"]=str(user.full_name)
+            refresh["name"] = str(user.full_name)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             content = {
                 'email': user.email,
-                'name':user.full_name,
+                'name': user.full_name,
                 'access_token': access_token,
                 'refresh_token': refresh_token,
                 'isAdmin': user.is_superuser,
-                'user_type':user.user_type,
-                'user_data':user_data
+                'user_type': user.user_type,
+                'user_data': employer_data
             }
 
-        return Response(content, status=status.HTTP_200_OK)
+            return Response(content, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Unexpected error during authentication: {e}")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+   
     
 class AuthCandidateView(APIView):
-    permission_classes= [AllowAny]
-    def post(self,request):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
         print(request.data)
         GOOGLE_AUTH_API = '588719467693-e6763ad5dltlhmi7bod9kgrcpubhi5ou.apps.googleusercontent.com'
+        email = None  
         try:
-            google_request = google_requests.Request()
+            google_request = requests.Request()
             user_info = id_token.verify_oauth2_token(
-                request.data['client_id'],google_request,GOOGLE_AUTH_API
+                request.data['client_id'], google_request, GOOGLE_AUTH_API
             )
             email = user_info['email']
-            
-        except:
-            pass
+            print("user infor..........",user_info)
+        except Exception as e:
+            print(e)
+            return Response({"error": "Invalid token or user information"}, status=status.HTTP_400_BAD_REQUEST)
+        
         if not User.objects.filter(email=email).exists():
             username = user_info['name']
             first_name = user_info['given_name']
             last_name = user_info['family_name']
             profile_picture = user_info['picture']
-            print(username,first_name,last_name,profile_picture)
-            user = User.objects.create(full_name=username,email=email,user_type='candidate',is_active=True,is_email_verified=True)
-            candidate = Candidate.objects.create(user=user,profile_pic=profile_picture)
+            print(username, first_name, last_name, profile_picture)
+            user = User.objects.create(
+                full_name=username,
+                email=email,
+                user_type='candidate',
+                is_active=True,
+                is_email_verified=True
+            )
+            candidate = Candidate.objects.create(user=user)
             user.save()
             candidate.save()
-            
-        user=User.objects.get(email=email)
+        
+        user = User.objects.get(email=email)
         if not user.is_active:
             return Response({"message": "Your account is inactive!"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
-        elif not user.user_type == 'candidate':
-            return Response({"message": "Only employer can login!"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+        elif user.user_type != 'candidate':
+            return Response({"message": "Only candidates can login!"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
         else:
             try:
-                candidate=Candidate.objects.get(user=user)
-                candidate=CandidateSerializer(candidate).data
-                user_data=candidate
+                candidate = Candidate.objects.get(user=user)
+                candidate = CandidateSerializer(candidate).data
+                user_data = candidate
             except Candidate.DoesNotExist:
-                return Response({"message": "something went Wrong"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION) 
-            
+                return Response({"message": "Something went wrong"}, status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+
         refresh = RefreshToken.for_user(user)
-        refresh["name"]=str(user.full_name)
+        refresh["name"] = str(user.full_name)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         content = {
             'email': user.email,
-            'name':user.full_name,
+            'name': user.full_name,
             'access_token': access_token,
             'refresh_token': refresh_token,
             'isAdmin': user.is_superuser,
-            'user_type':user.user_type,
-            'user_data':user_data
+            'user_type': user.user_type,
+            'user_data': user_data
         }
-
-        return Response(content, status=status.HTTP_200_OK)
+        return Response(content,status=status.HTTP_200_OK)
     
 class EmpLoginView(APIView):
     permission_classes = []

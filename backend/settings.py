@@ -71,11 +71,12 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:5173",
 
 # ]
-
+ 
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
@@ -103,6 +104,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 # WSGI_APPLICATION = 'backend.wsgi.application'
 AUTH_USER_MODEL = 'account.User'
